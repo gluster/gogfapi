@@ -1,4 +1,4 @@
-package gfapi
+package gogfapi
 
 import "testing"
 
