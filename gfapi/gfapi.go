@@ -21,7 +21,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 // Package gfapi provides a wrapper around gfapi, the GlusterFS api, which is used to access files/directories on a Gluster volume.
 // The design tries to follow the default go file handling functions provided by the os package as much as possible.
 package gfapi
@@ -161,4 +160,64 @@ func (f *File) Close() error {
 	_, err := C.glfs_close(f.fd)
 
 	return err
+}
+
+func (f *File) Chdir() error {
+	return nil
+}
+
+func (f *File) Chmod(mode os.FileMode) error {
+	return nil
+}
+
+func (f *File) Chown(uid, gid int) error {
+	return nil
+}
+
+func (f *File) Name() string {
+	return ""
+}
+
+func (f *File) Read(b []byte) (n int, err error) {
+	return 0, nil
+}
+
+func (f *File) ReadAt(b []byte, off int64) (n int, err error) {
+	return 0, nil
+}
+
+func (f *File) Readdir(n int) (fi []os.FileInfo, err error) {
+	return nil, nil
+}
+
+func (f *File) Readdirnames(n int) (names []string, err error) {
+	return nil, nil
+}
+
+func (f *File) Seek(offset int64, whence int) (ret int64, err error) {
+	return 0, nil
+}
+
+func (f *File) Stat() (fi os.FileInfo, err error) {
+	return nil, nil
+}
+
+func (f *File) Sync() error {
+	return nil
+}
+
+func (f *File) Truncate(size int64) error {
+	return nil
+}
+
+func (f *File) Write(b []byte) (n int, err error) {
+	return 0, nil
+}
+
+func (f *File) WriteAt(b []byte, off int64) (n int, err error) {
+	return 0, nil
+}
+
+func (f *File) WriteString(s string) (ret int, err error) {
+	return 0, nil
 }
