@@ -40,11 +40,6 @@ type Volume struct {
 	fs *C.glfs_t
 }
 
-// The gluster file object.
-type File struct {
-	fd *C.glfs_fd_t
-}
-
 // Init() initializes the Volume.
 // This must be performed before calling Mount().
 //
@@ -150,74 +145,4 @@ func (v *Volume) OpenFile(name string, flags int, perm os.FileMode) (*File, erro
 	}
 
 	return &File{cfd}, nil
-}
-
-// Close() closes an open File.
-// Close() is similar to os.Close() in its functioning.
-//
-// Returns an Error on failure.
-func (f *File) Close() error {
-	_, err := C.glfs_close(f.fd)
-
-	return err
-}
-
-func (f *File) Chdir() error {
-	return nil
-}
-
-func (f *File) Chmod(mode os.FileMode) error {
-	return nil
-}
-
-func (f *File) Chown(uid, gid int) error {
-	return nil
-}
-
-func (f *File) Name() string {
-	return ""
-}
-
-func (f *File) Read(b []byte) (n int, err error) {
-	return 0, nil
-}
-
-func (f *File) ReadAt(b []byte, off int64) (n int, err error) {
-	return 0, nil
-}
-
-func (f *File) Readdir(n int) (fi []os.FileInfo, err error) {
-	return nil, nil
-}
-
-func (f *File) Readdirnames(n int) (names []string, err error) {
-	return nil, nil
-}
-
-func (f *File) Seek(offset int64, whence int) (ret int64, err error) {
-	return 0, nil
-}
-
-func (f *File) Stat() (fi os.FileInfo, err error) {
-	return nil, nil
-}
-
-func (f *File) Sync() error {
-	return nil
-}
-
-func (f *File) Truncate(size int64) error {
-	return nil
-}
-
-func (f *File) Write(b []byte) (n int, err error) {
-	return 0, nil
-}
-
-func (f *File) WriteAt(b []byte, off int64) (n int, err error) {
-	return 0, nil
-}
-
-func (f *File) WriteString(s string) (ret int, err error) {
-	return 0, nil
 }
