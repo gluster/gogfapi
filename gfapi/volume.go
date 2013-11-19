@@ -25,6 +25,8 @@
 // The design tries to follow the default go file handling functions provided by the os package as much as possible.
 package gfapi
 
+// This file includes operations that operate on a gluster volume
+
 // #cgo pkg-config: glusterfs-api
 // #include "api/glfs.h"
 // #include <stdlib.h>
@@ -100,7 +102,7 @@ func (v *Volume) Create(name string) (*File, error) {
 		return nil, &os.PathError{"create", name, err}
 	}
 
-	return &File{cfd}, nil
+	return &File{name, Fd{cfd}}, nil
 }
 
 // Open() opens the named file on the the Volume v.
@@ -120,7 +122,7 @@ func (v *Volume) Open(name string) (*File, error) {
 		return nil, &os.PathError{"open", name, err}
 	}
 
-	return &File{cfd}, nil
+	return &File{name, Fd{cfd}}, nil
 }
 
 // OpenFile() opens the named file on the the Volume v.
@@ -144,5 +146,5 @@ func (v *Volume) OpenFile(name string, flags int, perm os.FileMode) (*File, erro
 		return nil, &os.PathError{"open", name, err}
 	}
 
-	return &File{cfd}, nil
+	return &File{name, Fd{cfd}}, nil
 }
