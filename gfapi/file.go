@@ -64,34 +64,44 @@ func (f *File) Chown(uid, gid int) error {
 	return nil
 }
 
+// Name() returns the name of the opened file
 func (f *File) Name() string {
 	return f.name
 }
 
-func (f *File) Read(b []byte) (n int, err error) {
+// Read() reads atmost len(b) bytes into b
+//
+// Returns number of bytes read and an error if any
+func (f *File) Read(b []byte) (int, error) {
 	return f.Fd.Read(b)
 }
 
-func (f *File) ReadAt(b []byte, off int64) (n int, err error) {
+// ReadAt() reads atmost len(b) bytes into b starting from offset off
+//
+// Returns number of bytes read and an error if any
+func (f *File) ReadAt(b []byte, off int64) (int, error) {
 	return f.Fd.Pread(b, off)
 }
 
-func (f *File) Readdir(n int) (fi []os.FileInfo, err error) {
+func (f *File) Readdir(n int) ([]os.FileInfo, error) {
 	return nil, nil
 }
 
-func (f *File) Readdirnames(n int) (names []string, err error) {
+func (f *File) Readdirnames(n int) ([]string, error) {
 	return nil, nil
 }
 
-func (f *File) Seek(offset int64, whence int) (ret int64, err error) {
+func (f *File) Seek(offset int64, whence int) (int64, error) {
 	return 0, nil
 }
 
-func (f *File) Stat() (fi os.FileInfo, err error) {
+func (f *File) Stat() (os.FileInfo, error) {
 	return nil, nil
 }
 
+// Sync() commits the file to the storage
+//
+// Returns error on failure
 func (f *File) Sync() error {
         err := f.Fd.Fsync()
 	return err
@@ -101,14 +111,23 @@ func (f *File) Truncate(size int64) error {
 	return nil
 }
 
-func (f *File) Write(b []byte) (n int, err error) {
+// Write() writes len(b) bytes to the file
+//
+// Returns number of bytes written and an error if any
+func (f *File) Write(b []byte) (int, error) {
 	return f.Fd.Write (b)
 }
 
-func (f *File) WriteAt(b []byte, off int64) (n int, err error) {
+// Write() writes len(b) bytes to the file starting at offset off
+//
+// Returns number of bytes written and an error if any
+func (f *File) WriteAt(b []byte, off int64) (int, error) {
 	return f.Fd.Pwrite(b, off)
 }
 
-func (f *File) WriteString(s string) (ret int, err error) {
+// WriteString() writes the contents of string s to the file
+//
+// Returns number of bytes written and an error if any
+func (f *File) WriteString(s string) (int, error) {
 	return f.Write([]byte(s))
 }
