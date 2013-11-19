@@ -69,11 +69,11 @@ func (f *File) Name() string {
 }
 
 func (f *File) Read(b []byte) (n int, err error) {
-	return 0, nil
+	return f.Fd.Read(b)
 }
 
 func (f *File) ReadAt(b []byte, off int64) (n int, err error) {
-	return 0, nil
+	return f.Fd.Pread(b, off)
 }
 
 func (f *File) Readdir(n int) (fi []os.FileInfo, err error) {
@@ -93,7 +93,8 @@ func (f *File) Stat() (fi os.FileInfo, err error) {
 }
 
 func (f *File) Sync() error {
-	return nil
+        err := f.Fd.Fsync()
+	return err
 }
 
 func (f *File) Truncate(size int64) error {
@@ -101,13 +102,13 @@ func (f *File) Truncate(size int64) error {
 }
 
 func (f *File) Write(b []byte) (n int, err error) {
-	return 0, nil
+	return f.Fd.Write (b)
 }
 
 func (f *File) WriteAt(b []byte, off int64) (n int, err error) {
-	return 0, nil
+	return f.Fd.Pwrite(b, off)
 }
 
 func (f *File) WriteString(s string) (ret int, err error) {
-	return 0, nil
+	return f.Write([]byte(s))
 }
