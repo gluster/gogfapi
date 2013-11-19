@@ -38,7 +38,7 @@ import (
 
 // The gluster file object.
 type File struct {
-        name string
+	name string
 	Fd
 }
 
@@ -103,7 +103,7 @@ func (f *File) Stat() (os.FileInfo, error) {
 //
 // Returns error on failure
 func (f *File) Sync() error {
-        err := f.Fd.Fsync()
+	err := f.Fd.Fsync()
 	return err
 }
 
@@ -115,7 +115,7 @@ func (f *File) Truncate(size int64) error {
 //
 // Returns number of bytes written and an error if any
 func (f *File) Write(b []byte) (int, error) {
-	return f.Fd.Write (b)
+	return f.Fd.Write(b)
 }
 
 // Write() writes len(b) bytes to the file starting at offset off
