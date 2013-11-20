@@ -164,11 +164,16 @@ func (v *Volume) OpenFile(name string, flags int, perm os.FileMode) (*File, erro
 // Truncate() changes the size of the named file
 //
 // Returns an error on failure
+//
+// TODO: gfapi currently (20131120) has not implement glfs_truncate.
+//       Once it has been implemented, renable the commented out code
+//       or write own function to implement the functionality of glfs_truncate
 func (v *Volume) Truncate(name string, size int64) error {
-        cname := C.CString(name)
-        defer C.free(unsafe.Pointer(cname))
+        // cname := C.CString(name)
+        // defer C.free(unsafe.Pointer(cname))
 
-        _, err := C.glfs_truncate(v.fs, cname, C.off_t(size))
+        // _, err := C.glfs_truncate(v.fs, cname, C.off_t(size))
 
-        return err
+        // return err
+        return nil
 }
