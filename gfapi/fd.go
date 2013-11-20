@@ -80,7 +80,7 @@ func (fd *Fd) Write(b []byte) (int, error) {
 }
 
 func (fd *Fd) lseek(offset int64, whence int) (int64, error) {
-        ret, err := C.glfs_lseek(fd.fd, C.off_t(offset), whence)
+        ret, err := C.glfs_lseek(fd.fd, C.off_t(offset), C.int(whence))
 
         return int64(ret), err
 }

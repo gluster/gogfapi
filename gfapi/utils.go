@@ -33,15 +33,15 @@ import (
 // posixMode() returns the posix specific  mode bits from Go's portable mode bits
 //
 // Copied from the syscallMode() function in file_posix.go in the Go source
-func syscallMode (i FileMode) (o uint32) {
+func posixMode (i os.FileMode) (o uint32) {
         o |= uint32(i.Perm())
-        if i&ModeSetuid != 0 {
+        if i&os.ModeSetuid != 0 {
                 o |= syscall.S_ISUID
         }
-        if i&ModeSetgid != 0 {
+        if i&os.ModeSetgid != 0 {
                 o |= syscall.S_ISGID
         }
-        if i&ModeSticky != 0 {
+        if i&os.ModeSticky != 0 {
                 o |= syscall.S_ISVTX
         }
         return

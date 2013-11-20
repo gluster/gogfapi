@@ -58,7 +58,7 @@ func (f *File) Chdir() error {
 //
 // Returns an error on failure
 func (f *File) Chmod(mode os.FileMode) error {
-	return f.Fd.Chmod(posixMode(mode))
+	return f.Fd.Fchmod(posixMode(mode))
 }
 
 func (f *File) Chown(uid, gid int) error {
