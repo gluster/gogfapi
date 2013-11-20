@@ -107,8 +107,11 @@ func (f *File) Sync() error {
 	return err
 }
 
+// Truncate() changes the size of the file
+//
+// Returns error on failure
 func (f *File) Truncate(size int64) error {
-	return nil
+	return f.Fd.Ftruncate(size)
 }
 
 // Write() writes len(b) bytes to the file

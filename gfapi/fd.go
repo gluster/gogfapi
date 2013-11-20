@@ -44,6 +44,12 @@ func (fd *Fd) Fsync() error {
 	return err
 }
 
+func (fd *Fd) Ftruncate(size int64) error {
+        _, err := C.glfs_fruncate (fd.fd, C.off_t(size))
+
+        return err
+}
+
 func (fd *Fd) Pread(b []byte, off int64) (int, error) {
 	n, err := C.glfs_pread(fd.fd, unsafe.Pointer(&b[0]), C.size_t(len(b)), C.off_t(off), 0)
 

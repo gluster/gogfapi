@@ -148,3 +148,15 @@ func (v *Volume) OpenFile(name string, flags int, perm os.FileMode) (*File, erro
 
 	return &File{name, Fd{cfd}}, nil
 }
+
+// Truncate() changes the size of the named file
+//
+// Returns an error on failure
+func (v *Volume) Truncate(name string, size int64) error {
+        cname := C.Cstring(name)
+        defer C.free(unsafe.Pointer(cname))
+
+        _, err := C.glfs_truncate(v.fs, cname, C.off_t(size))
+
+        return err
+}
