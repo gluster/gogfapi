@@ -91,8 +91,12 @@ func (f *File) Readdirnames(n int) ([]string, error) {
 	return nil, nil
 }
 
+// Seek() sets the offset for the next read or write on the file based on whence,
+// 0 - relative to beginning of file, 1 - relative to current offset, 2 - relative to end
+//
+// Returns new offset and an error if any
 func (f *File) Seek(offset int64, whence int) (int64, error) {
-	return 0, nil
+	return f.Fd.lseek(offset, whence)
 }
 
 func (f *File) Stat() (os.FileInfo, error) {
