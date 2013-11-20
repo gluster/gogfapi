@@ -38,6 +38,12 @@ type Fd struct {
 	fd *C.glfs_fd_t
 }
 
+func (fd *Fd) Fchmod (mode uint32) error {
+        _, err := C.glfs_fchmod(fd.fd, C.mode_t(mode))
+
+        return err
+}
+
 func (fd *Fd) Fsync() error {
 	_, err := C.glfs_fsync(fd.fd)
 

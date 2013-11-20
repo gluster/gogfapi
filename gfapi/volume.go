@@ -85,6 +85,18 @@ func (v *Volume) Unmount() int {
 	return int(ret)
 }
 
+// Chmod() changes the mode of the named file to given mode
+//
+// Returns an error on failure
+func (v *Volume) Chmod(name string, mode os.FileMode) error {
+        cname := C.Cstring(name)
+        defer C.free(unsafe.Pointer(cname))
+
+        _,err := C.glfs_chmod(v.fs, cname, C.mode_t(posixMode(mode)))
+
+        return err
+}
+
 // Create() creates a file with given name on the the Volume v.
 // The Volume must be mounted before calling Create().
 // Create() is similar to os.Create() in its functioning.
