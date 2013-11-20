@@ -89,7 +89,7 @@ func (v *Volume) Unmount() int {
 //
 // Returns an error on failure
 func (v *Volume) Chmod(name string, mode os.FileMode) error {
-        cname := C.Cstring(name)
+        cname := C.CString(name)
         defer C.free(unsafe.Pointer(cname))
 
         _,err := C.glfs_chmod(v.fs, cname, C.mode_t(posixMode(mode)))
@@ -165,7 +165,7 @@ func (v *Volume) OpenFile(name string, flags int, perm os.FileMode) (*File, erro
 //
 // Returns an error on failure
 func (v *Volume) Truncate(name string, size int64) error {
-        cname := C.Cstring(name)
+        cname := C.CString(name)
         defer C.free(unsafe.Pointer(cname))
 
         _, err := C.glfs_truncate(v.fs, cname, C.off_t(size))
