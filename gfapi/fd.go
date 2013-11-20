@@ -49,7 +49,7 @@ func (fd *Fd) Fsync() error {
 }
 
 func (fd *Fd) Ftruncate(size int64) error {
-        _, err := C.glfs_fruncate (fd.fd, C.off_t(size))
+        _, err := C.glfs_ftruncate (fd.fd, C.off_t(size))
 
         return err
 }
