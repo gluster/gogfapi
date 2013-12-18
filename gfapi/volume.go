@@ -34,6 +34,7 @@ package gfapi
 import "C"
 import (
 	"os"
+        "path"
         "syscall"
 	"unsafe"
 )
@@ -73,6 +74,37 @@ func (v *Volume) Mount() int {
 	ret := C.glfs_init(v.fs)
 
 	return int(ret)
+}
+
+type LogLevel int
+const (
+        LOG_NONE LogLevel = iota
+        LOG_EMERG
+        LOG_ALERT
+        LOG_CRITICAL
+        LOG_ERROR
+        LOG_WARNING
+        LOG_NOTICE
+        LOG_INFO
+        LOG_DEBUG
+        LOG_TRACE
+)
+
+// SetLogging() sets the path to the logfile for gfapi.
+// The Volume must be initialized before calling.
+//
+// Returns 0 on success and, non 0 and an error on failure.
+func (v *Volume) SetLogging(name string, logLevel LogLevel) (int, error){
+        if _, err := os.Stat(path.Dir(name)); err != nil {
+                return -1, err
+        }
+
+        cname := C.CString(name)
+        defer C.free(unsafe.Pointer(cname))
+
+        ret, err := C.glfs_set_logging (v.fs, cname, C.int(logLevel))
+
+        return int(ret), err
 }
 
 // Unmount() ends the virtual mount.
