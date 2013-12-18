@@ -34,6 +34,7 @@ package gfapi
 import "C"
 import (
 	"os"
+        "syscall"
 	"unsafe"
 )
 
@@ -117,6 +118,23 @@ func (v *Volume) Create(name string) (*File, error) {
 	return &File{name, Fd{cfd}}, nil
 }
 
+// Lstat() returns an os.FileInfo object describing the named file. It doesn't follow the link if the file is a symlink.
+//
+// Returns an error on failure
+func (v *Volume) Lstat (name string) (os.FileInfo, error) {
+        cname := C.CString(name)
+        defer C.free(unsafe.Pointer(cname))
+
+        var stat syscall.Stat_t
+        _, err := C.glfs_lstat(v.fs, cname, (*C.struct_stat)(unsafe.Pointer(&stat)))
+
+        if err != nil {
+                return nil, err
+        } else {
+                return fileInfoFromStat(&stat, name), nil
+        }
+}
+
 // Open() opens the named file on the the Volume v.
 // The Volume must be mounted before calling Open().
 // Open() is similar to os.Open() in its functioning.
@@ -159,6 +177,23 @@ func (v *Volume) OpenFile(name string, flags int, perm os.FileMode) (*File, erro
 	}
 
 	return &File{name, Fd{cfd}}, nil
+}
+
+// Stat() returns an os.FileInfo object describing the named file
+//
+// Returns an error on failure
+func (v *Volume) Stat (name string) (os.FileInfo, error) {
+        cname := C.CString(name)
+        defer C.free(unsafe.Pointer(cname))
+
+        var stat syscall.Stat_t
+        _, err := C.glfs_stat(v.fs, cname, (*C.struct_stat)(unsafe.Pointer(&stat)))
+
+        if err != nil {
+                return nil, err
+        } else {
+                return fileInfoFromStat(&stat, name), nil
+        }
 }
 
 // Truncate() changes the size of the named file

@@ -30,7 +30,10 @@ package gfapi
 // #include <stdlib.h>
 // #include <sys/stat.h>
 import "C"
-import "unsafe"
+import (
+        "unsafe"
+        "syscall"
+)
 
 type Fd struct {
 	fd *C.glfs_fd_t
@@ -38,6 +41,12 @@ type Fd struct {
 
 func (fd *Fd) Fchmod (mode uint32) error {
         _, err := C.glfs_fchmod(fd.fd, C.mode_t(mode))
+
+        return err
+}
+
+func (fd *Fd) Fstat(stat *syscall.Stat_t) error {
+        _, err := C.glfs_fstat(fd.fd, (*C.struct_stat)(unsafe.Pointer(stat)))
 
         return err
 }

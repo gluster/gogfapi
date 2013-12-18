@@ -32,6 +32,7 @@ package gfapi
 import "C"
 import (
 	"os"
+        "syscall"
 )
 
 // The gluster file object.
@@ -101,7 +102,14 @@ func (f *File) Seek(offset int64, whence int) (int64, error) {
 }
 
 func (f *File) Stat() (os.FileInfo, error) {
-	return nil, nil
+        var stat syscall.Stat_t
+        err := f.Fd.Fstat(&stat)
+
+        if err != nil {
+                return nil, err
+        } else {
+                return fileInfoFromStat(&stat, f.name), nil
+        }
 }
 
 // Sync() commits the file to the storage
