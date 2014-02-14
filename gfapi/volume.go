@@ -39,13 +39,13 @@ import (
 	"unsafe"
 )
 
-// The gluster filesystem object. Represents the virtual filesystem.
+// Volume is the gluster filesystem object, which represents the virtual filesystem.
 type Volume struct {
 	fs *C.glfs_t
 }
 
-// Init() initializes the Volume.
-// This must be performed before calling Mount().
+// Init initializes the Volume.
+// This must be performed before calling Mount.
 //
 // host is the hostname/ip of a gluster server.
 // volname is the name of a volume that you want to access.
@@ -66,8 +66,8 @@ func (v *Volume) Init(host string, volname string) int {
 	return int(ret)
 }
 
-// Mount() performs the virtual mount.
-// The Volume must be initalized before calling Mount().
+// Mount performs the virtual mount.
+// The Volume must be initalized before calling Mount.
 //
 // Return value is 0 for success and non 0 for failure.
 func (v *Volume) Mount() int {
@@ -76,21 +76,23 @@ func (v *Volume) Mount() int {
 	return int(ret)
 }
 
+// LogLevel is the logging level to be used to logging
 type LogLevel int
+// LogNone .. LogTrace are LogLevel types which correspond to the equivalent gluster log levels
 const (
-        LOG_NONE LogLevel = iota
-        LOG_EMERG
-        LOG_ALERT
-        LOG_CRITICAL
-        LOG_ERROR
-        LOG_WARNING
-        LOG_NOTICE
-        LOG_INFO
-        LOG_DEBUG
-        LOG_TRACE
+        LogNone LogLevel = iota
+        LogEmerg
+        LogAlert
+        LogCritical
+        LogError
+        LogWarning
+        LogNotice
+        LogInfo
+        LogDebug
+        LogTrace
 )
 
-// SetLogging() sets the path to the logfile for gfapi.
+// SetLogging sets the path to the logfile for gfapi.
 // The Volume must be initialized before calling.
 //
 // Returns 0 on success and, non 0 and an error on failure.
@@ -107,7 +109,7 @@ func (v *Volume) SetLogging(name string, logLevel LogLevel) (int, error){
         return int(ret), err
 }
 
-// Unmount() ends the virtual mount.
+// Unmount ends the virtual mount.
 //
 // Return value is 0 for success and non 0 for failure.
 //
@@ -118,7 +120,7 @@ func (v *Volume) Unmount() int {
 	return int(ret)
 }
 
-// Chmod() changes the mode of the named file to given mode
+// Chmod changes the mode of the named file to given mode
 //
 // Returns an error on failure
 func (v *Volume) Chmod(name string, mode os.FileMode) error {
@@ -130,9 +132,9 @@ func (v *Volume) Chmod(name string, mode os.FileMode) error {
         return err
 }
 
-// Create() creates a file with given name on the the Volume v.
-// The Volume must be mounted before calling Create().
-// Create() is similar to os.Create() in its functioning.
+// Create creates a file with given name on the the Volume v.
+// The Volume must be mounted before calling Create.
+// Create is similar to os.Create in its functioning.
 //
 // name is the name of the file to be create.
 //
@@ -150,7 +152,7 @@ func (v *Volume) Create(name string) (*File, error) {
 	return &File{name, Fd{cfd}}, nil
 }
 
-// Lstat() returns an os.FileInfo object describing the named file. It doesn't follow the link if the file is a symlink.
+// Lstat returns an os.FileInfo object describing the named file. It doesn't follow the link if the file is a symlink.
 //
 // Returns an error on failure
 func (v *Volume) Lstat (name string) (os.FileInfo, error) {
@@ -162,14 +164,13 @@ func (v *Volume) Lstat (name string) (os.FileInfo, error) {
 
         if err != nil {
                 return nil, err
-        } else {
-                return fileInfoFromStat(&stat, name), nil
         }
+        return fileInfoFromStat(&stat, name), nil
 }
 
-// Open() opens the named file on the the Volume v.
-// The Volume must be mounted before calling Open().
-// Open() is similar to os.Open() in its functioning.
+// Open opens the named file on the the Volume v.
+// The Volume must be mounted before calling Open.
+// Open is similar to os.Open in its functioning.
 //
 // name is the name of the file to be open.
 //
@@ -187,9 +188,9 @@ func (v *Volume) Open(name string) (*File, error) {
 	return &File{name, Fd{cfd}}, nil
 }
 
-// OpenFile() opens the named file on the the Volume v.
-// The Volume must be mounted before calling OpenFile().
-// OpenFile() is similar to os.OpenFile() in its functioning.
+// OpenFile opens the named file on the the Volume v.
+// The Volume must be mounted before calling OpenFile.
+// OpenFile is similar to os.OpenFile in its functioning.
 //
 // name is the name of the file to be open.
 // flags is the access mode of the file.
@@ -211,7 +212,7 @@ func (v *Volume) OpenFile(name string, flags int, perm os.FileMode) (*File, erro
 	return &File{name, Fd{cfd}}, nil
 }
 
-// Stat() returns an os.FileInfo object describing the named file
+// Stat returns an os.FileInfo object describing the named file
 //
 // Returns an error on failure
 func (v *Volume) Stat (name string) (os.FileInfo, error) {
@@ -223,12 +224,11 @@ func (v *Volume) Stat (name string) (os.FileInfo, error) {
 
         if err != nil {
                 return nil, err
-        } else {
-                return fileInfoFromStat(&stat, name), nil
         }
+        return fileInfoFromStat(&stat, name), nil
 }
 
-// Truncate() changes the size of the named file
+// Truncate changes the size of the named file
 //
 // Returns an error on failure
 //

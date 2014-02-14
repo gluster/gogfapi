@@ -35,14 +35,14 @@ import (
         "syscall"
 )
 
-// The gluster file object.
+// File is the gluster file object.
 type File struct {
 	name string
 	Fd
 }
 
-// Close() closes an open File.
-// Close() is similar to os.Close() in its functioning.
+// Close closes an open File.
+// Close is similar to os.Close in its functioning.
 //
 // Returns an Error on failure.
 func (f *File) Close() error {
@@ -51,49 +51,53 @@ func (f *File) Close() error {
 	return err
 }
 
+// Chdir has not been implemented yet
 func (f *File) Chdir() error {
 	return nil
 }
 
-// Chmod() changes the mode of the file to the given mode
+// Chmod changes the mode of the file to the given mode
 //
 // Returns an error on failure
 func (f *File) Chmod(mode os.FileMode) error {
 	return f.Fd.Fchmod(posixMode(mode))
 }
 
+// Chown has not been implemented yet
 func (f *File) Chown(uid, gid int) error {
 	return nil
 }
 
-// Name() returns the name of the opened file
+// Name returns the name of the opened file
 func (f *File) Name() string {
 	return f.name
 }
 
-// Read() reads atmost len(b) bytes into b
+// Read reads atmost len(b) bytes into b
 //
 // Returns number of bytes read and an error if any
 func (f *File) Read(b []byte) (int, error) {
 	return f.Fd.Read(b)
 }
 
-// ReadAt() reads atmost len(b) bytes into b starting from offset off
+// ReadAt reads atmost len(b) bytes into b starting from offset off
 //
 // Returns number of bytes read and an error if any
 func (f *File) ReadAt(b []byte, off int64) (int, error) {
 	return f.Fd.Pread(b, off)
 }
 
+// Readdir has not been implemented yet
 func (f *File) Readdir(n int) ([]os.FileInfo, error) {
 	return nil, nil
 }
 
+// Readdirnames has not been implemented yet
 func (f *File) Readdirnames(n int) ([]string, error) {
 	return nil, nil
 }
 
-// Seek() sets the offset for the next read or write on the file based on whence,
+// Seek sets the offset for the next read or write on the file based on whence,
 // 0 - relative to beginning of file, 1 - relative to current offset, 2 - relative to end
 //
 // Returns new offset and an error if any
@@ -101,18 +105,20 @@ func (f *File) Seek(offset int64, whence int) (int64, error) {
 	return f.Fd.lseek(offset, whence)
 }
 
+// Stat returns an os.FileInfo object describing the file
+//
+// Returns an error on failure
 func (f *File) Stat() (os.FileInfo, error) {
         var stat syscall.Stat_t
         err := f.Fd.Fstat(&stat)
 
         if err != nil {
                 return nil, err
-        } else {
-                return fileInfoFromStat(&stat, f.name), nil
         }
+        return fileInfoFromStat(&stat, f.name), nil
 }
 
-// Sync() commits the file to the storage
+// Sync commits the file to the storage
 //
 // Returns error on failure
 func (f *File) Sync() error {
@@ -120,28 +126,28 @@ func (f *File) Sync() error {
 	return err
 }
 
-// Truncate() changes the size of the file
+// Truncate changes the size of the file
 //
 // Returns error on failure
 func (f *File) Truncate(size int64) error {
 	return f.Fd.Ftruncate(size)
 }
 
-// Write() writes len(b) bytes to the file
+// Write writes len(b) bytes to the file
 //
 // Returns number of bytes written and an error if any
 func (f *File) Write(b []byte) (int, error) {
 	return f.Fd.Write(b)
 }
 
-// Write() writes len(b) bytes to the file starting at offset off
+// WriteAt writes len(b) bytes to the file starting at offset off
 //
 // Returns number of bytes written and an error if any
 func (f *File) WriteAt(b []byte, off int64) (int, error) {
 	return f.Fd.Pwrite(b, off)
 }
 
-// WriteString() writes the contents of string s to the file
+// WriteString writes the contents of string s to the file
 //
 // Returns number of bytes written and an error if any
 func (f *File) WriteString(s string) (int, error) {
