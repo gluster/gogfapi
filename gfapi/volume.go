@@ -34,8 +34,8 @@ package gfapi
 import "C"
 import (
 	"os"
-        "path"
-        "syscall"
+	"path"
+	"syscall"
 	"unsafe"
 )
 
@@ -78,35 +78,36 @@ func (v *Volume) Mount() int {
 
 // LogLevel is the logging level to be used to logging
 type LogLevel int
+
 // LogNone .. LogTrace are LogLevel types which correspond to the equivalent gluster log levels
 const (
-        LogNone LogLevel = iota
-        LogEmerg
-        LogAlert
-        LogCritical
-        LogError
-        LogWarning
-        LogNotice
-        LogInfo
-        LogDebug
-        LogTrace
+	LogNone LogLevel = iota
+	LogEmerg
+	LogAlert
+	LogCritical
+	LogError
+	LogWarning
+	LogNotice
+	LogInfo
+	LogDebug
+	LogTrace
 )
 
 // SetLogging sets the path to the logfile for gfapi.
 // The Volume must be initialized before calling.
 //
 // Returns 0 on success and, non 0 and an error on failure.
-func (v *Volume) SetLogging(name string, logLevel LogLevel) (int, error){
-        if _, err := os.Stat(path.Dir(name)); err != nil {
-                return -1, err
-        }
+func (v *Volume) SetLogging(name string, logLevel LogLevel) (int, error) {
+	if _, err := os.Stat(path.Dir(name)); err != nil {
+		return -1, err
+	}
 
-        cname := C.CString(name)
-        defer C.free(unsafe.Pointer(cname))
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
 
-        ret, err := C.glfs_set_logging (v.fs, cname, C.int(logLevel))
+	ret, err := C.glfs_set_logging(v.fs, cname, C.int(logLevel))
 
-        return int(ret), err
+	return int(ret), err
 }
 
 // Unmount ends the virtual mount.
@@ -124,12 +125,12 @@ func (v *Volume) Unmount() int {
 //
 // Returns an error on failure
 func (v *Volume) Chmod(name string, mode os.FileMode) error {
-        cname := C.CString(name)
-        defer C.free(unsafe.Pointer(cname))
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
 
-        _,err := C.glfs_chmod(v.fs, cname, C.mode_t(posixMode(mode)))
+	_, err := C.glfs_chmod(v.fs, cname, C.mode_t(posixMode(mode)))
 
-        return err
+	return err
 }
 
 // Create creates a file with given name on the the Volume v.
@@ -155,17 +156,17 @@ func (v *Volume) Create(name string) (*File, error) {
 // Lstat returns an os.FileInfo object describing the named file. It doesn't follow the link if the file is a symlink.
 //
 // Returns an error on failure
-func (v *Volume) Lstat (name string) (os.FileInfo, error) {
-        cname := C.CString(name)
-        defer C.free(unsafe.Pointer(cname))
+func (v *Volume) Lstat(name string) (os.FileInfo, error) {
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
 
-        var stat syscall.Stat_t
-        _, err := C.glfs_lstat(v.fs, cname, (*C.struct_stat)(unsafe.Pointer(&stat)))
+	var stat syscall.Stat_t
+	_, err := C.glfs_lstat(v.fs, cname, (*C.struct_stat)(unsafe.Pointer(&stat)))
 
-        if err != nil {
-                return nil, err
-        }
-        return fileInfoFromStat(&stat, name), nil
+	if err != nil {
+		return nil, err
+	}
+	return fileInfoFromStat(&stat, name), nil
 }
 
 // Open opens the named file on the the Volume v.
@@ -215,17 +216,17 @@ func (v *Volume) OpenFile(name string, flags int, perm os.FileMode) (*File, erro
 // Stat returns an os.FileInfo object describing the named file
 //
 // Returns an error on failure
-func (v *Volume) Stat (name string) (os.FileInfo, error) {
-        cname := C.CString(name)
-        defer C.free(unsafe.Pointer(cname))
+func (v *Volume) Stat(name string) (os.FileInfo, error) {
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
 
-        var stat syscall.Stat_t
-        _, err := C.glfs_stat(v.fs, cname, (*C.struct_stat)(unsafe.Pointer(&stat)))
+	var stat syscall.Stat_t
+	_, err := C.glfs_stat(v.fs, cname, (*C.struct_stat)(unsafe.Pointer(&stat)))
 
-        if err != nil {
-                return nil, err
-        }
-        return fileInfoFromStat(&stat, name), nil
+	if err != nil {
+		return nil, err
+	}
+	return fileInfoFromStat(&stat, name), nil
 }
 
 // Truncate changes the size of the named file
@@ -236,11 +237,11 @@ func (v *Volume) Stat (name string) (os.FileInfo, error) {
 //       Once it has been implemented, renable the commented out code
 //       or write own function to implement the functionality of glfs_truncate
 func (v *Volume) Truncate(name string, size int64) error {
-        // cname := C.CString(name)
-        // defer C.free(unsafe.Pointer(cname))
+	// cname := C.CString(name)
+	// defer C.free(unsafe.Pointer(cname))
 
-        // _, err := C.glfs_truncate(v.fs, cname, C.off_t(size))
+	// _, err := C.glfs_truncate(v.fs, cname, C.off_t(size))
 
-        // return err
-        return nil
+	// return err
+	return nil
 }
