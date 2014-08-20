@@ -150,7 +150,7 @@ func (v *Volume) Create(name string) (*File, error) {
 		return nil, &os.PathError{"create", name, err}
 	}
 
-	return &File{name, Fd{cfd}}, nil
+	return &File{name, Fd{cfd}, false}, nil
 }
 
 // Lstat returns an os.FileInfo object describing the named file. It doesn't follow the link if the file is a symlink.
@@ -177,16 +177,24 @@ func (v *Volume) Lstat(name string) (os.FileInfo, error) {
 //
 // Returns a File object on success and a os.PathError on failure.
 func (v *Volume) Open(name string) (*File, error) {
+	isDir := false
+
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
 	cfd, err := C.glfs_open(v.fs, cname, C.int(os.O_RDONLY))
 
+	// Try to reopen using glfs_opendir if the given path is a directory
+	if err == syscall.EISDIR {
+		isDir = true
+		cfd, err = C.glfs_opendir(v.fs, cname)
+	}
+
 	if cfd == nil {
 		return nil, &os.PathError{"open", name, err}
 	}
 
-	return &File{name, Fd{cfd}}, nil
+	return &File{name, Fd{cfd}, isDir}, nil
 }
 
 // OpenFile opens the named file on the the Volume v.
@@ -200,17 +208,26 @@ func (v *Volume) Open(name string) (*File, error) {
 // Returns a File object on success and a os.PathError on failure.
 //
 // BUG : perm is not used for opening the file.
+// NOTE: It is better to use Open, Create etc. instead of using OpenFile directly
 func (v *Volume) OpenFile(name string, flags int, perm os.FileMode) (*File, error) {
+	isDir := false
+
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
 	cfd, err := C.glfs_open(v.fs, cname, C.int(flags))
 
+	// Try to reopen using glfs_opendir if the given path is a directory
+	if err == syscall.EISDIR {
+		isDir = true
+		cfd, err = C.glfs_opendir(v.fs, cname)
+	}
+
 	if cfd == nil {
 		return nil, &os.PathError{"open", name, err}
 	}
 
-	return &File{name, Fd{cfd}}, nil
+	return &File{name, Fd{cfd}, isDir}, nil
 }
 
 // Stat returns an os.FileInfo object describing the named file

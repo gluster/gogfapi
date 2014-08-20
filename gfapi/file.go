@@ -39,6 +39,7 @@ import (
 type File struct {
 	name string
 	Fd
+	isDir bool
 }
 
 // Close closes an open File.
@@ -46,7 +47,13 @@ type File struct {
 //
 // Returns an Error on failure.
 func (f *File) Close() error {
-	_, err := C.glfs_close(f.fd)
+	var err error = nil
+
+	if f.isDir {
+		_, err = C.glfs_closedir(f.fd)
+	} else {
+		_, err = C.glfs_close(f.fd)
+	}
 
 	return err
 }
