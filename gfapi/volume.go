@@ -169,6 +169,21 @@ func (v *Volume) Lstat(name string) (os.FileInfo, error) {
 	return fileInfoFromStat(&stat, name), nil
 }
 
+// Mkdir creates a new directory with given name and permission bits
+//
+// Returns an error on failure
+func (v *Volume) Mkdir(name string, perm os.FileMode) error {
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+
+	ret, err := C.glfs_mkdir(v.fs, cname, C.mode_t(posixMode(perm)))
+
+	if ret != 0 {
+		return &os.PathError{"mkdir", name, err}
+	}
+	return nil
+}
+
 // Open opens the named file on the the Volume v.
 // The Volume must be mounted before calling Open.
 // Open is similar to os.Open in its functioning.
