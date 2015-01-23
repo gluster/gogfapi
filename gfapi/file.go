@@ -48,14 +48,19 @@ type File struct {
 // Returns an Error on failure.
 func (f *File) Close() error {
 	var err error = nil
+    var ret C.int
 
 	if f.isDir {
-		_, err = C.glfs_closedir(f.fd)
+		ret, err = C.glfs_closedir(f.Fd.fd)
 	} else {
-		_, err = C.glfs_close(f.fd)
+		ret, err = C.glfs_close(f.Fd.fd)
 	}
+    if ret != 0 {
+        return err
+    } else {
+        return nil
+    }
 
-	return err
 }
 
 // Chdir has not been implemented yet
