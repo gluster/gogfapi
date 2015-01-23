@@ -19,7 +19,7 @@ func TestInit(t *testing.T) {
 		t.Fatalf("Failed to allocate variable")
 	}
 
-	ret := vol.Init("locahost", "test")
+	ret := vol.Init("localhost", "test")
 	if ret != 0 {
 		t.Fatalf("Failed to initialize volume. Ret = %d", ret)
 	}
