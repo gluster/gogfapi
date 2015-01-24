@@ -25,6 +25,13 @@ func TestInit(t *testing.T) {
 	}
 }
 
+func TestSetLogging(t *testing.T) {
+    ret, err := vol.SetLogging("/var/log/glusterfs/test.log", LogDebug)
+    if ret != 0 && err != nil {
+        t.Fatalf("Unable to set Logging ret = %d; error = %v", ret, err)
+        }
+}
+
 func TestMount(t *testing.T) {
 	ret := vol.Mount()
 	if ret != 0 {
