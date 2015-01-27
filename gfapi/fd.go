@@ -31,8 +31,8 @@ package gfapi
 // #include <sys/stat.h>
 import "C"
 import (
-        "unsafe"
-        "syscall"
+	"syscall"
+	"unsafe"
 )
 
 // Fd is the glusterfs fd type
@@ -43,19 +43,19 @@ type Fd struct {
 // Fchmod changes the mode of the Fd to the given mode
 //
 // Returns error on failure
-func (fd *Fd) Fchmod (mode uint32) error {
-        _, err := C.glfs_fchmod(fd.fd, C.mode_t(mode))
+func (fd *Fd) Fchmod(mode uint32) error {
+	_, err := C.glfs_fchmod(fd.fd, C.mode_t(mode))
 
-        return err
+	return err
 }
 
 // Fstat performs an fstat call on the Fd and saves stat details in the passed stat structure
 //
 // Returns error on failure
 func (fd *Fd) Fstat(stat *syscall.Stat_t) error {
-        _, err := C.glfs_fstat(fd.fd, (*C.struct_stat)(unsafe.Pointer(stat)))
+	_, err := C.glfs_fstat(fd.fd, (*C.struct_stat)(unsafe.Pointer(stat)))
 
-        return err
+	return err
 }
 
 // Fsync performs an fsync on the Fd
@@ -71,9 +71,9 @@ func (fd *Fd) Fsync() error {
 //
 // Returns error on failure
 func (fd *Fd) Ftruncate(size int64) error {
-        _, err := C.glfs_ftruncate (fd.fd, C.off_t(size))
+	_, err := C.glfs_ftruncate(fd.fd, C.off_t(size))
 
-        return err
+	return err
 }
 
 // Pread reads at most len(b) bytes into b from offset off in Fd
@@ -114,7 +114,7 @@ func (fd *Fd) Write(b []byte) (int, error) {
 }
 
 func (fd *Fd) lseek(offset int64, whence int) (int64, error) {
-        ret, err := C.glfs_lseek(fd.fd, C.off_t(offset), C.int(whence))
+	ret, err := C.glfs_lseek(fd.fd, C.off_t(offset), C.int(whence))
 
-        return int64(ret), err
+	return int64(ret), err
 }

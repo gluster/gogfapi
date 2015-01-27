@@ -48,18 +48,18 @@ type File struct {
 // Returns an Error on failure.
 func (f *File) Close() error {
 	var err error = nil
-    var ret C.int
+	var ret C.int
 
 	if f.isDir {
 		ret, err = C.glfs_closedir(f.Fd.fd)
 	} else {
 		ret, err = C.glfs_close(f.Fd.fd)
 	}
-    if ret != 0 {
-        return err
-    } else {
-        return nil
-    }
+	if ret != 0 {
+		return err
+	} else {
+		return nil
+	}
 
 }
 
