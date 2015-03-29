@@ -184,6 +184,56 @@ func (v *Volume) Mkdir(name string, perm os.FileMode) error {
 	return nil
 }
 
+// MkdirAll creates a directory named path, along with any necessary parents,
+// and returns nil, or else returns an error.
+// The permission bits perm are used for all directories that MkdirAll creates.
+// If path is already a directory, MkdirAll does nothing and returns nil.
+func (v *Volume) MkdirAll(path string, perm os.FileMode) error {
+	// Fast path: if we can tell whether path is a directory or file, stop with success or error.
+	dir, err := v.Stat(path)
+	if err == nil {
+		if dir.IsDir() {
+			return nil
+		}
+		return &os.PathError{"mkdir", path, syscall.ENOTDIR}
+	}
+
+	// Slow path: make sure parent exists and then call Mkdir for path.
+	i := len(path)
+	for i > 0 && os.IsPathSeparator(path[i-1]) { // Skip trailing path separator.
+		i--
+	}
+
+	j := i
+	for j > 0 && !os.IsPathSeparator(path[j-1]) { // Scan backward over element.
+		j--
+	}
+
+	if j > 1 {
+		// Create parent
+		err = v.MkdirAll(path[0:j-1], perm)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Parent now exists; invoke Mkdir and use its result.
+	err = v.Mkdir(path, perm)
+	if err != nil {
+		// Handle arguments like "foo/." by
+		// double-checking that directory doesn't exist.
+		dir, err1 := v.Lstat(path)
+		if err1 == nil && dir.IsDir() {
+			return nil
+		}
+		return err
+	}
+
+	return nil
+}
+
+// RemoveAll removes path and any children it con
+
 // Open opens the named file on the the Volume v.
 // The Volume must be mounted before calling Open.
 // Open is similar to os.Open in its functioning.
