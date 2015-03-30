@@ -91,7 +91,7 @@ func fileInfoFromStat(st *syscall.Stat_t, name string) os.FileInfo {
 	fs := &fileInfo{
 		name:    path.Base(name),
 		size:    int64(st.Size),
-		modTime: timespecToTime(st.Mtim),
+		modTime: timespecToTime(getLastModification(st)),
 		sys:     st,
 	}
 	fs.mode = os.FileMode(st.Mode & 0777)
