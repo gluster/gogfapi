@@ -66,6 +66,25 @@ func (v *Volume) Init(host string, volname string) int {
 	return int(ret)
 }
 
+// InitWithVolfile initializes the Volume using the given volfile.
+// This must be done before calling Mount.
+//
+// volfile is the path to the locally available volfile
+//
+// Return value is 0 for success and non 0 for failure
+func (v *Volume) InitWithVolfile(volname, volfile string) int {
+	cvolname := C.CString(volname)
+	cvolfile := C.CString(volfile)
+	defer C.free(unsafe.Pointer(cvolname))
+	defer C.free(unsafe.Pointer(cvolfile))
+
+	v.fs = C.glfs_new(cvolname)
+
+	ret := C.glfs_set_volfile(v.fs, cvolfile)
+
+	return int(ret)
+}
+
 // Mount performs the virtual mount.
 // The Volume must be initalized before calling Mount.
 //
