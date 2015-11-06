@@ -128,6 +128,73 @@ func TestClose2(t *testing.T) {
 	file = nil
 }
 
+func TestFxattrs(t *testing.T) {
+
+	f, err := vol.Create("/testFxattrs")
+	if err != nil {
+		t.Fatalf("Failed to create file. Error = %v", err)
+	}
+	defer f.Close()
+
+	err = f.Setxattr("user.glusterfs", []byte("Gluster is awesome!"), 0)
+	if err != nil {
+		t.Errorf("f.Setxattr() failed. Error = %v", err)
+	}
+
+	size, err := f.Getxattr("user.glusterfs", nil)
+	if err != nil {
+		t.Errorf("f.Getxattr() failed. Error = %v", err)
+	}
+	buf := make([]byte, size)
+	size, err = f.Getxattr("user.glusterfs", buf)
+	if err != nil {
+		t.Errorf("f.Getxattr() failed. Error = %v", err)
+	}
+
+	if "Gluster is awesome!" != string(buf[:size]) {
+		t.Errorf("xattrs do not match")
+	}
+
+	err = f.Removexattr("user.glusterfs")
+	if err != nil {
+		t.Errorf("f.Removexattr() failed. Error = %v", err)
+	}
+}
+
+func TestXattrs(t *testing.T) {
+
+	path := "/testXattrs"
+	f, err := vol.Create(path)
+	if err != nil {
+		t.Fatalf("Failed to create file. Error = %v", err)
+	}
+	f.Close()
+
+	err = vol.Setxattr(path, "user.glusterfs", []byte("Gluster is awesome!"), 0)
+	if err != nil {
+		t.Errorf("vol.Setxattr() failed. Error = %v", err)
+	}
+
+	size, err := vol.Getxattr(path, "user.glusterfs", nil)
+	if err != nil {
+		t.Errorf("vol.Getxattr() failed. Error = %v", err)
+	}
+	buf := make([]byte, size)
+	size, err = vol.Getxattr(path, "user.glusterfs", buf)
+	if err != nil {
+		t.Errorf("vol.Getxattr() failed. Error = %v", err)
+	}
+
+	if "Gluster is awesome!" != string(buf[:size]) {
+		t.Errorf("xattrs do not match")
+	}
+
+	err = vol.Removexattr(path, "user.glusterfs")
+	if err != nil {
+		t.Errorf("vol.Removexattr() failed. Error = %v", err)
+	}
+}
+
 func TestUnmount(t *testing.T) {
 	ret := vol.Unmount()
 	if ret != 0 {
