@@ -123,15 +123,13 @@ func (fd *Fd) Fgetxattr(attr string, dest []byte) (int64, error) {
 	var ret C.ssize_t
 	var err error
 
-	attrp, err := syscall.BytePtrFromString(attr)
-	if err != nil {
-		return 0, err
-	}
+	cattr := C.CString(attr)
+	defer C.free(unsafe.Pointer(cattr))
 
 	if len(dest) <= 0 {
-		ret, err = C.glfs_fgetxattr(fd.fd, (*C.char)(unsafe.Pointer(attrp)), nil, 0)
+		ret, err = C.glfs_fgetxattr(fd.fd, cattr, nil, 0)
 	} else {
-		ret, err = C.glfs_fgetxattr(fd.fd, (*C.char)(unsafe.Pointer(attrp)),
+		ret, err = C.glfs_fgetxattr(fd.fd, cattr,
 			unsafe.Pointer(&dest[0]), C.size_t(len(dest)))
 	}
 
@@ -144,12 +142,10 @@ func (fd *Fd) Fgetxattr(attr string, dest []byte) (int64, error) {
 
 func (fd *Fd) Fsetxattr(attr string, data []byte, flags int) error {
 
-	attrp, err := syscall.BytePtrFromString(attr)
-	if err != nil {
-		return err
-	}
+	cattr := C.CString(attr)
+	defer C.free(unsafe.Pointer(cattr))
 
-	ret, err := C.glfs_fsetxattr(fd.fd, (*C.char)(unsafe.Pointer(attrp)),
+	ret, err := C.glfs_fsetxattr(fd.fd, cattr,
 		unsafe.Pointer(&data[0]), C.size_t(len(data)),
 		C.int(flags))
 
@@ -161,12 +157,10 @@ func (fd *Fd) Fsetxattr(attr string, data []byte, flags int) error {
 
 func (fd *Fd) Fremovexattr(attr string) error {
 
-	attrp, err := syscall.BytePtrFromString(attr)
-	if err != nil {
-		return err
-	}
+	cattr := C.CString(attr)
+	defer C.free(unsafe.Pointer(cattr))
 
-	ret, err := C.glfs_fremovexattr(fd.fd, (*C.char)(unsafe.Pointer(attrp)))
+	ret, err := C.glfs_fremovexattr(fd.fd, cattr)
 
 	if ret == 0 {
 		err = nil

@@ -354,22 +354,16 @@ func (v *Volume) Getxattr(path string, attr string, dest []byte) (int64, error) 
 	var ret C.ssize_t
 	var err error
 
-	pathp, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return 0, err
-	}
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
 
-	attrp, err := syscall.BytePtrFromString(attr)
-	if err != nil {
-		return 0, err
-	}
+	cattr := C.CString(attr)
+	defer C.free(unsafe.Pointer(cattr))
 
 	if len(dest) <= 0 {
-		ret, err = C.glfs_getxattr(v.fs, (*C.char)(unsafe.Pointer(pathp)),
-			(*C.char)(unsafe.Pointer(attrp)), nil, 0)
+		ret, err = C.glfs_getxattr(v.fs, cpath, cattr, nil, 0)
 	} else {
-		ret, err = C.glfs_getxattr(v.fs, (*C.char)(unsafe.Pointer(pathp)),
-			(*C.char)(unsafe.Pointer(attrp)),
+		ret, err = C.glfs_getxattr(v.fs, cpath, cattr,
 			unsafe.Pointer(&dest[0]), C.size_t(len(dest)))
 	}
 
@@ -385,18 +379,13 @@ func (v *Volume) Getxattr(path string, attr string, dest []byte) (int64, error) 
 // Returns error on failure
 func (v *Volume) Setxattr(path string, attr string, data []byte, flags int) error {
 
-	pathp, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
 
-	attrp, err := syscall.BytePtrFromString(attr)
-	if err != nil {
-		return err
-	}
+	cattr := C.CString(attr)
+	defer C.free(unsafe.Pointer(cattr))
 
-	ret, err := C.glfs_setxattr(v.fs, (*C.char)(unsafe.Pointer(pathp)),
-		(*C.char)(unsafe.Pointer(attrp)),
+	ret, err := C.glfs_setxattr(v.fs, cpath, cattr,
 		unsafe.Pointer(&data[0]), C.size_t(len(data)),
 		C.int(flags))
 
@@ -411,18 +400,13 @@ func (v *Volume) Setxattr(path string, attr string, data []byte, flags int) erro
 // Returns error on failure
 func (v *Volume) Removexattr(path string, attr string) error {
 
-	pathp, err := syscall.BytePtrFromString(path)
-	if err != nil {
-		return err
-	}
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
 
-	attrp, err := syscall.BytePtrFromString(attr)
-	if err != nil {
-		return err
-	}
+	cattr := C.CString(attr)
+	defer C.free(unsafe.Pointer(cattr))
 
-	ret, err := C.glfs_removexattr(v.fs, (*C.char)(unsafe.Pointer(pathp)),
-		(*C.char)(unsafe.Pointer(attrp)))
+	ret, err := C.glfs_removexattr(v.fs, cpath, cattr)
 
 	if ret == 0 {
 		err = nil
