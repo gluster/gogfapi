@@ -346,3 +346,70 @@ func (v *Volume) Truncate(name string, size int64) error {
 	// return err
 	return nil
 }
+
+// Get value of the extended attribute 'attr' and place it in 'dest'
+//
+// Returns number of bytes placed in 'dest' and error if any
+func (v *Volume) Getxattr(path string, attr string, dest []byte) (int64, error) {
+	var ret C.ssize_t
+	var err error
+
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+
+	cattr := C.CString(attr)
+	defer C.free(unsafe.Pointer(cattr))
+
+	if len(dest) <= 0 {
+		ret, err = C.glfs_getxattr(v.fs, cpath, cattr, nil, 0)
+	} else {
+		ret, err = C.glfs_getxattr(v.fs, cpath, cattr,
+			unsafe.Pointer(&dest[0]), C.size_t(len(dest)))
+	}
+
+	if ret >= 0 {
+		return int64(ret), nil
+	} else {
+		return int64(ret), err
+	}
+}
+
+// Set extended attribute with key 'attr' and value 'data'
+//
+// Returns error on failure
+func (v *Volume) Setxattr(path string, attr string, data []byte, flags int) error {
+
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+
+	cattr := C.CString(attr)
+	defer C.free(unsafe.Pointer(cattr))
+
+	ret, err := C.glfs_setxattr(v.fs, cpath, cattr,
+		unsafe.Pointer(&data[0]), C.size_t(len(data)),
+		C.int(flags))
+
+	if ret == 0 {
+		err = nil
+	}
+	return err
+}
+
+// Remove extended attribute named 'attr'
+//
+// Returns error on failure
+func (v *Volume) Removexattr(path string, attr string) error {
+
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+
+	cattr := C.CString(attr)
+	defer C.free(unsafe.Pointer(cattr))
+
+	ret, err := C.glfs_removexattr(v.fs, cpath, cattr)
+
+	if ret == 0 {
+		err = nil
+	}
+	return err
+}

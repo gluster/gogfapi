@@ -165,3 +165,24 @@ func (f *File) WriteAt(b []byte, off int64) (int, error) {
 func (f *File) WriteString(s string) (int, error) {
 	return f.Write([]byte(s))
 }
+
+// Get value of the extended attribute 'attr' and place it in 'dest'
+//
+// Returns number of bytes placed in 'dest' and error if any
+func (f *File) Getxattr(attr string, dest []byte) (int64, error) {
+	return f.Fd.Fgetxattr(attr, dest)
+}
+
+// Set extended attribute with key 'attr' and value 'data'
+//
+// Returns error on failure
+func (f *File) Setxattr(attr string, data []byte, flags int) error {
+	return f.Fd.Fsetxattr(attr, data, flags)
+}
+
+// Remove extended attribute named 'attr'
+//
+// Returns error on failure
+func (f *File) Removexattr(attr string) error {
+	return f.Fd.Fremovexattr(attr)
+}

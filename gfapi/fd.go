@@ -118,3 +118,52 @@ func (fd *Fd) lseek(offset int64, whence int) (int64, error) {
 
 	return int64(ret), err
 }
+
+func (fd *Fd) Fgetxattr(attr string, dest []byte) (int64, error) {
+	var ret C.ssize_t
+	var err error
+
+	cattr := C.CString(attr)
+	defer C.free(unsafe.Pointer(cattr))
+
+	if len(dest) <= 0 {
+		ret, err = C.glfs_fgetxattr(fd.fd, cattr, nil, 0)
+	} else {
+		ret, err = C.glfs_fgetxattr(fd.fd, cattr,
+			unsafe.Pointer(&dest[0]), C.size_t(len(dest)))
+	}
+
+	if ret >= 0 {
+		return int64(ret), nil
+	} else {
+		return int64(ret), err
+	}
+}
+
+func (fd *Fd) Fsetxattr(attr string, data []byte, flags int) error {
+
+	cattr := C.CString(attr)
+	defer C.free(unsafe.Pointer(cattr))
+
+	ret, err := C.glfs_fsetxattr(fd.fd, cattr,
+		unsafe.Pointer(&data[0]), C.size_t(len(data)),
+		C.int(flags))
+
+	if ret == 0 {
+		err = nil
+	}
+	return err
+}
+
+func (fd *Fd) Fremovexattr(attr string) error {
+
+	cattr := C.CString(attr)
+	defer C.free(unsafe.Pointer(cattr))
+
+	ret, err := C.glfs_fremovexattr(fd.fd, cattr)
+
+	if ret == 0 {
+		err = nil
+	}
+	return err
+}
