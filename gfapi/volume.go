@@ -464,3 +464,20 @@ func (v *Volume) Removexattr(path string, attr string) error {
 	}
 	return err
 }
+
+// Get filesystem statistics
+//
+// Returns an error on failure
+func (v *Volume) Statvfs(path string, buf *Statvfs_t) error {
+
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+
+	ret, err := C.glfs_statvfs(v.fs, cpath,
+		(*C.struct_statvfs)(unsafe.Pointer(buf)))
+
+	if ret == 0 {
+		err = nil
+	}
+	return err
+}

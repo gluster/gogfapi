@@ -3,6 +3,7 @@ package gfapi
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -230,6 +231,20 @@ func TestXattrs(t *testing.T) {
 	err = vol.Removexattr(path, "user.glusterfs")
 	if err != nil {
 		t.Errorf("vol.Removexattr() failed. Error = %v", err)
+	}
+}
+
+func TestStatvfs(t *testing.T) {
+	if runtime.GOOS == "linux" {
+		var vbuf Statvfs_t
+		err := vol.Statvfs("/", &vbuf)
+		if err != nil {
+			t.Errorf("vol.Statvfs() failed. Error = %v", err)
+		}
+
+		if vbuf.Namemax != 255 {
+			t.Errorf("vol.Statvfs() failed. Incorrect Namemax")
+		}
 	}
 }
 
