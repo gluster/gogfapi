@@ -119,6 +119,16 @@ func (fd *Fd) lseek(offset int64, whence int) (int64, error) {
 	return int64(ret), err
 }
 
+func (fd *Fd) Fallocate(mode int, offset int64, len int64) error {
+	ret, err := C.glfs_fallocate(fd.fd, C.int(mode),
+		C.off_t(offset), C.size_t(len))
+
+	if ret == 0 {
+		err = nil
+	}
+	return err
+}
+
 func (fd *Fd) Fgetxattr(attr string, dest []byte) (int64, error) {
 	var ret C.ssize_t
 	var err error

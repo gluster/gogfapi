@@ -128,6 +128,44 @@ func TestClose2(t *testing.T) {
 	file = nil
 }
 
+func TestUnlink(t *testing.T) {
+	f, err := vol.Create("/TestUnlink")
+	if err != nil {
+		t.Fatalf("Failed to create file. Error = %v", err)
+	}
+	f.Close()
+
+	err = vol.Unlink("/TestUnlink")
+	if err != nil {
+		t.Errorf("vol.Unlink failed . Error = %v", err)
+	}
+}
+
+func TestRmdir(t *testing.T) {
+	err := vol.Mkdir("/TestRmdir", 0755)
+	if err != nil {
+		t.Fatalf("Failed to create file. Error = %v", err)
+	}
+
+	err = vol.Rmdir("/TestRmdir")
+	if err != nil {
+		t.Errorf("vol.Rmdir failed . Error = %v", err)
+	}
+}
+
+func TestRename(t *testing.T) {
+	f, err := vol.Create("TestRename")
+	if err != nil {
+		t.Fatalf("Failed to create file. Error = %v", err)
+	}
+	f.Close()
+
+	err = vol.Rename("TestRename", "TestRenameNew")
+	if err != nil {
+		t.Errorf("vol.Rename failed . Error = %v", err)
+	}
+}
+
 func TestFxattrs(t *testing.T) {
 
 	f, err := vol.Create("/testFxattrs")
