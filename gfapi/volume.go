@@ -172,6 +172,22 @@ func (v *Volume) Create(name string) (*File, error) {
 	return &File{name, Fd{cfd}, false}, nil
 }
 
+// Removes existing an file
+//
+// Returns error on failure
+func (v *Volume) Unlink(path string) error {
+
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+
+	ret, err := C.glfs_unlink(v.fs, cpath)
+
+	if ret != 0 {
+		return &os.PathError{"unlink", path, err}
+	}
+	return nil
+}
+
 // Lstat returns an os.FileInfo object describing the named file. It doesn't follow the link if the file is a symlink.
 //
 // Returns an error on failure
@@ -199,6 +215,22 @@ func (v *Volume) Mkdir(name string, perm os.FileMode) error {
 
 	if ret != 0 {
 		return &os.PathError{"mkdir", name, err}
+	}
+	return nil
+}
+
+// Removes an existing directory
+//
+// Returns error on failure
+func (v *Volume) Rmdir(path string) error {
+
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+
+	ret, err := C.glfs_rmdir(v.fs, cpath)
+
+	if ret != 0 {
+		return &os.PathError{"rmdir", path, err}
 	}
 	return nil
 }
@@ -347,6 +379,25 @@ func (v *Volume) Truncate(name string, size int64) error {
 	return nil
 }
 
+// Rename a file or directory
+//
+// Returns error on failure
+func (v *Volume) Rename(oldpath string, newpath string) error {
+
+	coldpath := C.CString(oldpath)
+	defer C.free(unsafe.Pointer(coldpath))
+
+	cnewpath := C.CString(newpath)
+	defer C.free(unsafe.Pointer(cnewpath))
+
+	ret, err := C.glfs_rename(v.fs, coldpath, cnewpath)
+
+	if ret == 0 {
+		err = nil
+	}
+	return err
+}
+
 // Get value of the extended attribute 'attr' and place it in 'dest'
 //
 // Returns number of bytes placed in 'dest' and error if any
@@ -407,6 +458,23 @@ func (v *Volume) Removexattr(path string, attr string) error {
 	defer C.free(unsafe.Pointer(cattr))
 
 	ret, err := C.glfs_removexattr(v.fs, cpath, cattr)
+
+	if ret == 0 {
+		err = nil
+	}
+	return err
+}
+
+// Get filesystem statistics
+//
+// Returns an error on failure
+func (v *Volume) Statvfs(path string, buf *Statvfs_t) error {
+
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+
+	ret, err := C.glfs_statvfs(v.fs, cpath,
+		(*C.struct_statvfs)(unsafe.Pointer(buf)))
 
 	if ret == 0 {
 		err = nil

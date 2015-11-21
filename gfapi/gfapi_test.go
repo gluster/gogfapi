@@ -3,6 +3,7 @@ package gfapi
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -128,6 +129,44 @@ func TestClose2(t *testing.T) {
 	file = nil
 }
 
+func TestUnlink(t *testing.T) {
+	f, err := vol.Create("/TestUnlink")
+	if err != nil {
+		t.Fatalf("Failed to create file. Error = %v", err)
+	}
+	f.Close()
+
+	err = vol.Unlink("/TestUnlink")
+	if err != nil {
+		t.Errorf("vol.Unlink failed . Error = %v", err)
+	}
+}
+
+func TestRmdir(t *testing.T) {
+	err := vol.Mkdir("/TestRmdir", 0755)
+	if err != nil {
+		t.Fatalf("Failed to create file. Error = %v", err)
+	}
+
+	err = vol.Rmdir("/TestRmdir")
+	if err != nil {
+		t.Errorf("vol.Rmdir failed . Error = %v", err)
+	}
+}
+
+func TestRename(t *testing.T) {
+	f, err := vol.Create("TestRename")
+	if err != nil {
+		t.Fatalf("Failed to create file. Error = %v", err)
+	}
+	f.Close()
+
+	err = vol.Rename("TestRename", "TestRenameNew")
+	if err != nil {
+		t.Errorf("vol.Rename failed . Error = %v", err)
+	}
+}
+
 func TestFxattrs(t *testing.T) {
 
 	f, err := vol.Create("/testFxattrs")
@@ -192,6 +231,20 @@ func TestXattrs(t *testing.T) {
 	err = vol.Removexattr(path, "user.glusterfs")
 	if err != nil {
 		t.Errorf("vol.Removexattr() failed. Error = %v", err)
+	}
+}
+
+func TestStatvfs(t *testing.T) {
+	if runtime.GOOS == "linux" {
+		var vbuf Statvfs_t
+		err := vol.Statvfs("/", &vbuf)
+		if err != nil {
+			t.Errorf("vol.Statvfs() failed. Error = %v", err)
+		}
+
+		if vbuf.Namemax != 255 {
+			t.Errorf("vol.Statvfs() failed. Incorrect Namemax")
+		}
 	}
 }
 

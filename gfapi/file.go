@@ -166,6 +166,13 @@ func (f *File) WriteString(s string) (int, error) {
 	return f.Write([]byte(s))
 }
 
+// Manipulate the allocated disk space for the file
+//
+// Returns error on failure
+func (f *File) Fallocate(mode int, offset int64, len int64) error {
+	return f.Fd.Fallocate(mode, offset, len)
+}
+
 // Get value of the extended attribute 'attr' and place it in 'dest'
 //
 // Returns number of bytes placed in 'dest' and error if any
