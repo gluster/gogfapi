@@ -27,6 +27,11 @@ package gfapi
 
 // This file includes operations that operate on a gluster volume
 
+//go:generate sh -c "go tool cgo -godefs types_unix.go | gofmt > ztypes_${GOOS}_${GOARCH}.go"
+//TODO: Need to run `go generate` on different platforms to generate relevant ztypes file for each
+// - *BSD
+// - Mac OS X
+
 // #cgo pkg-config: glusterfs-api
 // #include "api/glfs.h"
 // #include <stdlib.h>
