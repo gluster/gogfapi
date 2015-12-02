@@ -336,7 +336,13 @@ func (v *Volume) OpenFile(name string, flags int, perm os.FileMode) (*File, erro
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
-	cfd, err := C.glfs_open(v.fs, cname, C.int(flags))
+	var cfd *C.glfs_fd_t
+	var err error
+	if (os.O_CREATE & flags) == os.O_CREATE {
+		cfd, err = C.glfs_creat(v.fs, cname, C.int(flags), C.mode_t(posixMode(perm)))
+	} else {
+		cfd, err = C.glfs_open(v.fs, cname, C.int(flags))
+	}
 
 	// Try to reopen using glfs_opendir if the given path is a directory
 	if err == syscall.EISDIR {
