@@ -109,6 +109,11 @@ func (fd *Fd) Read(b []byte) (int, error) {
 func (fd *Fd) Write(b []byte) (int, error) {
 
 	n, err := C.glfs_write(fd.fd, unsafe.Pointer(&b[0]), C.size_t(len(b)), 0)
+	if n == C.ssize_t(len(b)) {
+		// FIXME: errno is set to EINVAL even though write is successful. This
+		// is probably a bug. Remove this workaround when that gets fixed.
+		err = nil
+	}
 	return int(n), err
 
 }
