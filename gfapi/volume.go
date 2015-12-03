@@ -122,6 +122,14 @@ const (
 //
 // Returns 0 on success and, non 0 and an error on failure.
 func (v *Volume) SetLogging(name string, logLevel LogLevel) (int, error) {
+
+	if name == "" {
+		// a new logfile will be created in default log directory associated
+		// with the glusterfs installation (/var/log/glusterfs)
+		ret, err := C.glfs_set_logging(v.fs, nil, C.int(logLevel))
+		return int(ret), err
+	}
+
 	if _, err := os.Stat(path.Dir(name)); err != nil {
 		return -1, err
 	}
