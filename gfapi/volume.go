@@ -120,12 +120,13 @@ const (
 // SetLogging sets the path to the logfile for gfapi.
 // The Volume must be initialized before calling.
 //
+// If an empty string "" is passed as 'name', a logfile will be created in
+// default log directory (/var/log/glusterfs)
+//
 // Returns 0 on success and, non 0 and an error on failure.
 func (v *Volume) SetLogging(name string, logLevel LogLevel) (int, error) {
 
 	if name == "" {
-		// a new logfile will be created in default log directory associated
-		// with the glusterfs installation (/var/log/glusterfs)
 		ret, err := C.glfs_set_logging(v.fs, nil, C.int(logLevel))
 		return int(ret), err
 	}
