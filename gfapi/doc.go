@@ -2,4 +2,4 @@
 // used to access files/directories on a Gluster volume.
 // The design tries to follow the default go file handling functions provided
 // by the os package as much as possible.
-package gfapi
+package gfapi // import "github.com/gluster/gogfapi/gfapi"
