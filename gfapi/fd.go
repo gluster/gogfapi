@@ -17,6 +17,8 @@ type Fd struct {
 	fd *C.glfs_fd_t
 }
 
+var _zero uintptr
+
 // Fchmod changes the mode of the Fd to the given mode
 //
 // Returns error on failure
@@ -30,18 +32,23 @@ func (fd *Fd) Fchmod(mode uint32) error {
 //
 // Returns error on failure
 func (fd *Fd) Fstat(stat *syscall.Stat_t) error {
-	_, err := C.glfs_fstat(fd.fd, (*C.struct_stat)(unsafe.Pointer(stat)))
 
-	return err
+	ret, err := C.glfs_fstat(fd.fd, (*C.struct_stat)(unsafe.Pointer(stat)))
+	if int(ret) < 0 {
+		return err
+	}
+	return nil
 }
 
 // Fsync performs an fsync on the Fd
 //
 // Returns error on failure
 func (fd *Fd) Fsync() error {
-	_, err := C.glfs_fsync(fd.fd)
-
-	return err
+	ret, err := C.glfs_fsync(fd.fd)
+	if ret < 0 {
+		return err
+	}
+	return nil
 }
 
 // Ftruncate truncates the size of the Fd to the given size
@@ -74,25 +81,49 @@ func (fd *Fd) Pwrite(b []byte, off int64) (int, error) {
 // Read reads at most len(b) bytes into b from Fd
 //
 // Returns number of bytes read on success and error on failure
-func (fd *Fd) Read(b []byte) (int, error) {
-	n, err := C.glfs_read(fd.fd, unsafe.Pointer(&b[0]), C.size_t(len(b)), 0)
+func (fd *Fd) Read(b []byte) (n int, err error) {
+	var p0 unsafe.Pointer
 
-	return int(n), err
+	if len(b) > 0 {
+		p0 = unsafe.Pointer(&b[0])
+	} else {
+		p0 = unsafe.Pointer(&_zero)
+	}
+
+	// glfs_read returns a ssize_t. The value of which is the number of bytes written.
+	// Unless, ret is -1, an error, implying to check errno. cgo collects errno as the
+	// functions error return value.
+	ret, e1 := C.glfs_read(fd.fd, p0, C.size_t(len(b)), 0)
+	n = int(ret)
+	if n < 0 {
+		err = e1
+	}
+
+	return n, err
 }
 
 // Write writes len(b) bytes from b into the Fd
 //
 // Returns number of bytes written on success and error on failure
-func (fd *Fd) Write(b []byte) (int, error) {
+func (fd *Fd) Write(b []byte) (n int, err error) {
+	var p0 unsafe.Pointer
 
-	n, err := C.glfs_write(fd.fd, unsafe.Pointer(&b[0]), C.size_t(len(b)), 0)
-	if n == C.ssize_t(len(b)) {
-		// FIXME: errno is set to EINVAL even though write is successful. This
-		// is probably a bug. Remove this workaround when that gets fixed.
-		err = nil
+	if len(b) > 0 {
+		p0 = unsafe.Pointer(&b[0])
+	} else {
+		p0 = unsafe.Pointer(&_zero)
 	}
-	return int(n), err
 
+	// glfs_write returns a ssize_t. The value of which is the number of bytes written.
+	// Unless, ret is -1, an error, implying to check errno. cgo collects errno as the
+	// functions error return value.
+	ret, e1 := C.glfs_write(fd.fd, p0, C.size_t(len(b)), 0)
+	n = int(ret)
+	if n < 0 {
+		err = e1
+	}
+
+	return n, err
 }
 
 func (fd *Fd) lseek(offset int64, whence int) (int64, error) {

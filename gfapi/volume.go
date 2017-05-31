@@ -1,6 +1,7 @@
 package gfapi
 
 // This file includes operations that operate on a gluster volume
+// for more information please 'api/src/glfs.h' in the glusterfs source.
 
 //go:generate sh -c "go tool cgo -godefs types_unix.go | gofmt > ztypes_${GOOS}_${GOARCH}.go"
 //TODO: Need to run `go generate` on different platforms to generate relevant ztypes file for each
@@ -13,6 +14,8 @@ package gfapi
 // #include <sys/stat.h>
 import "C"
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path"
 	"syscall"
@@ -24,26 +27,36 @@ type Volume struct {
 	fs *C.glfs_t
 }
 
-// Init initializes the Volume.
-// This must be performed before calling Mount.
+// Init creates a new glfs object "Volume". Volname is the name of the Gluster Volume
+// and also the "volfile-id". Hosts accepts one or more hostname(s) and/or IP(s)
+// of volname's constitute volfile servers (management server/glusterd).
 //
-// host is the hostname/ip of a gluster server.
-// volname is the name of a volume that you want to access.
-//
-// Return value is 0 for success and non 0 for failure.
-func (v *Volume) Init(host string, volname string) int {
+// Limitations:
+// * Assumes tcp transport and glusterd is listening on 24007
+func (v *Volume) Init(volname string, hosts ...string) error {
 	cvolname := C.CString(volname)
-	chost := C.CString(host)
 	ctrans := C.CString("tcp")
 	defer C.free(unsafe.Pointer(cvolname))
-	defer C.free(unsafe.Pointer(chost))
 	defer C.free(unsafe.Pointer(ctrans))
 
 	v.fs = C.glfs_new(cvolname)
+	if v.fs == nil {
+		return fmt.Errorf("error creating mount object")
+	}
 
-	ret := C.glfs_set_volfile_server(v.fs, ctrans, chost, 24007)
+	for i, host := range hosts {
+		chost := C.CString(host)
+		defer C.free(unsafe.Pointer(chost))
+		// NOTE: This API is special, multiple calls to this function with different
+		// volfile servers, port or transport-type would create a list of volfile
+		// servers which would be polled during `volfile_fetch_attempts()`
+		ret, err := C.glfs_set_volfile_server(v.fs, ctrans, chost, 24007)
+		if int(ret) < 0 {
+			return fmt.Errorf("error adding host %d of %d %q as a volserver: %s", i, len(hosts), host, err)
+		}
+	}
 
-	return int(ret)
+	return nil
 }
 
 // InitWithVolfile initializes the Volume using the given volfile.
@@ -65,14 +78,23 @@ func (v *Volume) InitWithVolfile(volname, volfile string) int {
 	return int(ret)
 }
 
-// Mount performs the virtual mount.
-// The Volume must be initalized before calling Mount.
+// Mount establishes a 'virtual mount.' Mount must be called after Init and
+// before storage operations. Steps taken:
 //
-// Return value is 0 for success and non 0 for failure.
-func (v *Volume) Mount() int {
-	ret := C.glfs_init(v.fs)
+//  - Spawn a poll-loop thread.
+//  - Establish connection to management daemon (volfile server) and receive volume specification (volfile).
+//  - Construct translator graph and initialize graph.
+//  - Wait for initialization (connecting to all bricks) to complete.
+//
+// Source: glfs.h
+func (v *Volume) Mount() error {
 
-	return int(ret)
+	ret, err := C.glfs_init(v.fs)
+	if int(ret) < 0 {
+		return fmt.Errorf("mount failed: %s", err)
+	}
+
+	return nil
 }
 
 // LogLevel is the logging level to be used to logging
@@ -92,41 +114,41 @@ const (
 	LogTrace
 )
 
-// SetLogging sets the path to the logfile for gfapi.
-// The Volume must be initialized before calling.
-//
-// If an empty string "" is passed as 'name', a logfile will be created in
-// default log directory (/var/log/glusterfs)
-//
-// Returns 0 on success and, non 0 and an error on failure.
-func (v *Volume) SetLogging(name string, logLevel LogLevel) (int, error) {
+// SetLogging sets the gfapi log file path and LogLevel. The Volume must be
+// initialized before calling. An empty string "" is passed as 'name'
+// sets the default log directory (/var/log/glusterfs).
+func (v *Volume) SetLogging(name string, logLevel LogLevel) error {
 
 	if name == "" {
 		ret, err := C.glfs_set_logging(v.fs, nil, C.int(logLevel))
-		return int(ret), err
+		if int(ret) < 0 {
+			return err
+		}
+		return nil
 	}
 
 	if _, err := os.Stat(path.Dir(name)); err != nil {
-		return -1, err
+		return err
 	}
 
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
 	ret, err := C.glfs_set_logging(v.fs, cname, C.int(logLevel))
+	if int(ret) < 0 {
+		return err
+	}
 
-	return int(ret), err
+	return nil
 }
 
 // Unmount ends the virtual mount.
-//
-// Return value is 0 for success and non 0 for failure.
-//
-// BUG : Always returns non-zero presently. Better to ignore the return value for now.
-func (v *Volume) Unmount() int {
-	ret := C.glfs_fini(v.fs)
-
-	return int(ret)
+func (v *Volume) Unmount() error {
+	ret, err := C.glfs_fini(v.fs)
+	if int(ret) < 0 {
+		return fmt.Errorf("failure to unmount volume: %s", err)
+	}
+	return nil
 }
 
 // Chmod changes the mode of the named file to given mode
@@ -161,17 +183,14 @@ func (v *Volume) Create(name string) (*File, error) {
 	return &File{name, Fd{cfd}, false}, nil
 }
 
-// Removes existing an file
-//
-// Returns error on failure
+// Unlink attempts to unlink a file a path and returns a non-nil error on failure.
 func (v *Volume) Unlink(path string) error {
 
 	cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(cpath))
 
 	ret, err := C.glfs_unlink(v.fs, cpath)
-
-	if ret != 0 {
+	if int(ret) < 0 {
 		return &os.PathError{"unlink", path, err}
 	}
 	return nil
@@ -185,9 +204,8 @@ func (v *Volume) Lstat(name string) (os.FileInfo, error) {
 	defer C.free(unsafe.Pointer(cname))
 
 	var stat syscall.Stat_t
-	_, err := C.glfs_lstat(v.fs, cname, (*C.struct_stat)(unsafe.Pointer(&stat)))
-
-	if err != nil {
+	ret, err := C.glfs_lstat(v.fs, cname, (*C.struct_stat)(unsafe.Pointer(&stat)))
+	if int(ret) < 0 {
 		return nil, err
 	}
 	return fileInfoFromStat(&stat, name), nil
@@ -349,10 +367,9 @@ func (v *Volume) Stat(name string) (os.FileInfo, error) {
 	defer C.free(unsafe.Pointer(cname))
 
 	var stat syscall.Stat_t
-	_, err := C.glfs_stat(v.fs, cname, (*C.struct_stat)(unsafe.Pointer(&stat)))
-
-	if err != nil {
-		return nil, err
+	ret, err := C.glfs_stat(v.fs, cname, (*C.struct_stat)(unsafe.Pointer(&stat)))
+	if int(ret) < 0 {
+		return nil, &os.PathError{"stat", name, err}
 	}
 	return fileInfoFromStat(&stat, name), nil
 }
@@ -371,7 +388,7 @@ func (v *Volume) Truncate(name string, size int64) error {
 	// _, err := C.glfs_truncate(v.fs, cname, C.off_t(size))
 
 	// return err
-	return nil
+	return errors.New("Truncate not implemented")
 }
 
 // Rename a file or directory
@@ -386,11 +403,10 @@ func (v *Volume) Rename(oldpath string, newpath string) error {
 	defer C.free(unsafe.Pointer(cnewpath))
 
 	ret, err := C.glfs_rename(v.fs, coldpath, cnewpath)
-
-	if ret == 0 {
-		err = nil
+	if int(ret) < 0 {
+		return err
 	}
-	return err
+	return nil
 }
 
 // Get value of the extended attribute 'attr' and place it in 'dest'

@@ -24,23 +24,23 @@ func TestInit(t *testing.T) {
 		t.Fatalf("Failed to allocate variable")
 	}
 
-	ret := vol.Init("localhost", "test")
-	if ret != 0 {
-		t.Fatalf("Failed to initialize volume. Ret = %d", ret)
+	err := vol.Init("localhost", "test")
+	if err != nil {
+		t.Fatalf("Failed to initialize volume. error: %v", err)
 	}
 }
 
 func TestSetLogging(t *testing.T) {
-	ret, err := vol.SetLogging("/var/log/glusterfs/test.log", LogDebug)
-	if ret != 0 && err != nil {
-		t.Fatalf("Unable to set Logging ret = %d; error = %v", ret, err)
+	err := vol.SetLogging("/var/log/glusterfs/test.log", LogDebug)
+	if err != nil {
+		t.Fatalf("Unable to set Logging: error:  %v", err)
 	}
 }
 
 func TestMount(t *testing.T) {
-	ret := vol.Mount()
-	if ret != 0 {
-		t.Fatalf("Failed to mount volume. Ret = %d", ret)
+	err := vol.Mount()
+	if err != nil {
+		t.Fatalf("Failed to mount volume. error: %v", err)
 	}
 }
 
@@ -249,8 +249,8 @@ func TestStatvfs(t *testing.T) {
 }
 
 func TestUnmount(t *testing.T) {
-	ret := vol.Unmount()
-	if ret != 0 {
-		t.Logf("Failed to unmount volume. Ret = %d", ret)
+	err := vol.Unmount()
+	if err != nil {
+		t.Logf("Failed to unmount volume. Ret = %v", err)
 	}
 }
