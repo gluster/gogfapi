@@ -7,6 +7,9 @@ More information on the API is available on [godoc.org/github.com/gluster/gofapi
 
 > Note: GoGFAPI uses [cgo](https://golang.org/cmd/cgo/) to bind with libgfapi.
 
+> Important: Commit 83a4c9f12fec7d6e1112b5ebbd614a679940ad45 made changes to the `volume.Init()` function.
+> The order of the function parameters was changed to support multiple volfile servers.
+
 ## Using GoGFAPI
 
 First ensure that libgfapi is installed on your system. For Fedora and CentOS (and other EL systems) install the `glusterfs-api` package.
