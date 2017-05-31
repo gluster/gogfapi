@@ -8,6 +8,8 @@ package gfapi
 // #include <sys/stat.h>
 import "C"
 import (
+	"errors"
+	"io"
 	"os"
 	"syscall"
 )
@@ -24,7 +26,7 @@ type File struct {
 //
 // Returns an Error on failure.
 func (f *File) Close() error {
-	var err error = nil
+	var err error
 	var ret C.int
 
 	if f.isDir {
@@ -32,17 +34,16 @@ func (f *File) Close() error {
 	} else {
 		ret, err = C.glfs_close(f.Fd.fd)
 	}
-	if ret != 0 {
+	if ret < 0 {
 		return err
-	} else {
-		return nil
 	}
 
+	return nil
 }
 
 // Chdir has not been implemented yet
 func (f *File) Chdir() error {
-	return nil
+	return errors.New("Chdir has not been implemented yet")
 }
 
 // Chmod changes the mode of the file to the given mode
@@ -54,7 +55,7 @@ func (f *File) Chmod(mode os.FileMode) error {
 
 // Chown has not been implemented yet
 func (f *File) Chown(uid, gid int) error {
-	return nil
+	return errors.New("Chown has not been implemented yet")
 }
 
 // Name returns the name of the opened file
@@ -65,8 +66,18 @@ func (f *File) Name() string {
 // Read reads atmost len(b) bytes into b
 //
 // Returns number of bytes read and an error if any
-func (f *File) Read(b []byte) (int, error) {
-	return f.Fd.Read(b)
+func (f *File) Read(b []byte) (n int, err error) {
+	if f == nil {
+		return 0, os.ErrInvalid
+	}
+	n, e := f.Fd.Read(b)
+	if n == 0 && len(b) > 0 && e == nil {
+		return 0, io.EOF
+	}
+	if e != nil {
+		err = &os.PathError{"read", f.name, e}
+	}
+	return n, err
 }
 
 // ReadAt reads atmost len(b) bytes into b starting from offset off
@@ -78,12 +89,12 @@ func (f *File) ReadAt(b []byte, off int64) (int, error) {
 
 // Readdir has not been implemented yet
 func (f *File) Readdir(n int) ([]os.FileInfo, error) {
-	return nil, nil
+	return nil, errors.New("Readdir has not been implemented yet")
 }
 
 // Readdirnames has not been implemented yet
 func (f *File) Readdirnames(n int) ([]string, error) {
-	return nil, nil
+	return nil, errors.New("Readdirnames has not been implemented yet")
 }
 
 // Seek sets the offset for the next read or write on the file based on whence,
@@ -111,8 +122,7 @@ func (f *File) Stat() (os.FileInfo, error) {
 //
 // Returns error on failure
 func (f *File) Sync() error {
-	err := f.Fd.Fsync()
-	return err
+	return f.Fd.Fsync()
 }
 
 // Truncate changes the size of the file
@@ -125,8 +135,19 @@ func (f *File) Truncate(size int64) error {
 // Write writes len(b) bytes to the file
 //
 // Returns number of bytes written and an error if any
-func (f *File) Write(b []byte) (int, error) {
-	return f.Fd.Write(b)
+func (f *File) Write(b []byte) (n int, err error) {
+	if f == nil {
+		return 0, os.ErrInvalid
+	}
+	n, e := f.Fd.Write(b)
+
+	if n != len(b) {
+		err = io.ErrShortWrite
+	}
+	if e != nil {
+		err = &os.PathError{"write", f.name, e}
+	}
+	return n, err
 }
 
 // WriteAt writes len(b) bytes to the file starting at offset off
