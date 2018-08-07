@@ -3,7 +3,7 @@ package gfapi
 // This file includes lower level operations on fd like the ones in the 'syscall' package
 
 // #cgo pkg-config: glusterfs-api
-// #include "api/glfs.h"
+// #include "glusterfs/api/glfs.h"
 // #include <stdlib.h>
 // #include <sys/stat.h>
 import "C"
