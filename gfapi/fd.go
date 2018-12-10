@@ -8,6 +8,7 @@ package gfapi
 // #include <sys/stat.h>
 import "C"
 import (
+	"os"
 	"syscall"
 	"unsafe"
 )
@@ -189,4 +190,72 @@ func (fd *Fd) Fremovexattr(attr string) error {
 		err = nil
 	}
 	return err
+}
+
+func direntName(dirent *syscall.Dirent) string {
+	name := make([]byte, 0, len(dirent.Name))
+	for i, c := range dirent.Name {
+		if c == 0 || i > 255 {
+			break
+		}
+
+		name = append(name, byte(c))
+	}
+
+	return string(name)
+}
+
+// Readdir returns the information of files in a directory.
+//
+// n is the maximum number of items to return. If there are more items than
+// the maximum they can be obtained in successive calls. If maximum is 0
+// then all the items will be returned.
+func (fd *Fd) Readdir(n int) ([]os.FileInfo, error) {
+	var (
+		stat  syscall.Stat_t
+		files []os.FileInfo
+		statP = (*C.struct_stat)(unsafe.Pointer(&stat))
+	)
+
+	for i := 0; n == 0 || i < n; i++ {
+		d, err := C.glfs_readdirplus(fd.fd, statP)
+		if err != nil {
+			return nil, err
+		}
+
+		dirent := (*syscall.Dirent)(unsafe.Pointer(d))
+		if dirent == nil {
+			break
+		}
+
+		name := direntName(dirent)
+		file := fileInfoFromStat(&stat, name)
+		files = append(files, file)
+	}
+
+	return files, nil
+}
+
+// Readdirnames returns the names of files in a directory.
+//
+// n is the maximum number of items to return and works the same way as Readdir.
+func (fd *Fd) Readdirnames(n int) ([]string, error) {
+	var names []string
+
+	for i := 0; n == 0 || i < n; i++ {
+		d, err := C.glfs_readdir(fd.fd)
+		if err != nil {
+			return nil, err
+		}
+
+		dirent := (*syscall.Dirent)(unsafe.Pointer(d))
+		if dirent == nil {
+			break
+		}
+
+		name := direntName(dirent)
+		names = append(names, name)
+	}
+
+	return names, nil
 }
