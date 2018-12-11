@@ -87,14 +87,20 @@ func (f *File) ReadAt(b []byte, off int64) (int, error) {
 	return f.Fd.Pread(b, off)
 }
 
-// Readdir has not been implemented yet
+// Readdir returns the information of files in a directory.
+//
+// n is the maximum number of items to return. If there are more items than
+// the maximum they can be obtained in successive calls. If maximum is 0
+// then all the items will be returned.
 func (f *File) Readdir(n int) ([]os.FileInfo, error) {
-	return nil, errors.New("Readdir has not been implemented yet")
+	return f.Fd.Readdir(n)
 }
 
-// Readdirnames has not been implemented yet
+// Readdirnames returns the names of files in a directory.
+//
+// n is the maximum number of items to return and works the same way as Readdir.
 func (f *File) Readdirnames(n int) ([]string, error) {
-	return nil, errors.New("Readdirnames has not been implemented yet")
+	return f.Fd.Readdirnames(n)
 }
 
 // Seek sets the offset for the next read or write on the file based on whence,

@@ -3,7 +3,9 @@ package gfapi
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
+	"sort"
 	"testing"
 )
 
@@ -24,7 +26,7 @@ func TestInit(t *testing.T) {
 		t.Fatalf("Failed to allocate variable")
 	}
 
-	err := vol.Init("localhost", "test")
+	err := vol.Init("test", "localhost")
 	if err != nil {
 		t.Fatalf("Failed to initialize volume. error: %v", err)
 	}
@@ -248,9 +250,173 @@ func TestStatvfs(t *testing.T) {
 	}
 }
 
+func TestReaddir(t *testing.T) {
+	tmpDir, clean := setupReaddir(t)
+	defer clean()
+
+	d, err := vol.Open(tmpDir)
+	check(t, err == nil, "Open %q: %s", tmpDir, err)
+
+	info, err := d.Readdir(0)
+	check(t, err == nil, "Readdir %q: %s", tmpDir, err)
+
+	err = d.Close()
+	check(t, err == nil, "Close %q: %s", tmpDir, err)
+
+	check(t, len(info) == 4,
+		"incorrect number of files %v != %v", len(info), 4)
+
+	files := map[string]os.FileInfo{
+		"dir":  nil,
+		"file": nil,
+	}
+
+	for _, d := range info {
+		if d == nil {
+			continue
+		}
+		if _, ok := files[d.Name()]; ok {
+			files[d.Name()] = d
+		}
+	}
+
+	check(t, files["file"] != nil, "no info for file")
+	check(t, files["file"].IsDir() == false, "file should not be a dir")
+	check(t, files["file"].Size() == int64(len(data)),
+		"incorrect file size %v != %v", files["file"].Size(), len(data))
+
+	check(t, files["dir"] != nil, "no info for dir")
+	check(t, files["dir"].IsDir() == true, "dir should be a directory")
+	check(t, files["dir"].Mode()&os.ModePerm == dirPerm,
+		"incorrect dir mode %#o != %#o", files["dir"].Mode(), dirPerm)
+
+	// test readdir with limit
+
+	d, err = vol.Open(tmpDir)
+	check(t, err == nil, "Open %q: %s", tmpDir, err)
+
+	info, err = d.Readdir(2)
+	check(t, err == nil, "Readdir %q: %s", tmpDir, err)
+	check(t, len(info) == 2, "should only read 2 files")
+
+	info, err = d.Readdir(2)
+	check(t, err == nil, "Readdir %q: %s", tmpDir, err)
+	check(t, len(info) == 2, "should only read 2 files")
+
+	info, err = d.Readdir(2)
+	check(t, err == nil, "Readdir %q: %s", tmpDir, err)
+	check(t, len(info) == 0, "should not read more files")
+
+	err = d.Close()
+	check(t, err == nil, "Close %q: %s", tmpDir, err)
+}
+
+func TestReaddirnames(t *testing.T) {
+	tmpDir, clean := setupReaddir(t)
+	defer clean()
+
+	d, err := vol.Open(tmpDir)
+	check(t, err == nil, "Open %q: %s", tmpDir, err)
+
+	names, err := d.Readdirnames(0)
+	check(t, err == nil, "Readdirnames %q: %s", tmpDir, err)
+
+	err = d.Close()
+	check(t, err == nil, "Close %q: %s", tmpDir, err)
+
+	check(t, len(names) == 4,
+		"incorrect number of files %v != %v", len(names), 4)
+
+	expected := []string{
+		".",
+		"..",
+		"dir",
+		"file",
+	}
+
+	sort.Strings(names)
+	check(t, reflect.DeepEqual(names, expected),
+		"file names doesn't match %v != %v", names, expected)
+
+	// test readdirnames with limit
+
+	d, err = vol.Open(tmpDir)
+	check(t, err == nil, "Open %q: %s", tmpDir, err)
+
+	var all []string
+
+	names, err = d.Readdirnames(2)
+	check(t, err == nil, "Readdirnames %q: %s", tmpDir, err)
+	check(t, len(names) == 2, "should only read 2 files")
+	all = append(all, names...)
+
+	names, err = d.Readdirnames(2)
+	check(t, err == nil, "Readdirnames %q: %s", tmpDir, err)
+	check(t, len(names) == 2, "should only read 2 files")
+	all = append(all, names...)
+
+	names, err = d.Readdirnames(2)
+	check(t, err == nil, "Readdirnames %q: %s", tmpDir, err)
+	check(t, len(names) == 0, "should not read more files")
+
+	err = d.Close()
+	check(t, err == nil, "Close %q: %s", tmpDir, err)
+
+	check(t, len(all) == 4,
+		"incorrect number of files %v != %v", len(all), 4)
+
+	sort.Strings(all)
+	check(t, reflect.DeepEqual(all, expected),
+		"file names doesn't match %v != %v", all, expected)
+}
+
 func TestUnmount(t *testing.T) {
 	err := vol.Unmount()
 	if err != nil {
 		t.Logf("Failed to unmount volume. Ret = %v", err)
+	}
+}
+
+var (
+	dirPerm = os.FileMode(0700)
+	data    = []byte("data")
+)
+
+func setupReaddir(t *testing.T) (string, func()) {
+	tmpDir := "/test-gluster-readdir"
+	err := vol.MkdirAll(tmpDir, 0777)
+	check(t, err == nil, "MkdirAll %q: %s", tmpDir, err)
+
+	dir := filepath.Join(tmpDir, "dir")
+	file := filepath.Join(tmpDir, "file")
+
+	err = vol.MkdirAll(dir, dirPerm)
+	check(t, err == nil, "MkdirAll %q: %s", dir, err)
+
+	f, err := vol.Create(file)
+	check(t, err == nil, "Create %q: %s", file, err)
+
+	n, err := f.Write(data)
+	check(t, err == nil, "Write %q: %s", file, err)
+	check(t, n == len(data), "write length incorrect, %v != %v", n, len(data))
+
+	_, err = f.Readdir(0)
+	check(t, err != nil, "Readdir should fail with files, %v", file)
+
+	err = f.Close()
+	check(t, err == nil, "Close %q: %s", file, err)
+
+	return tmpDir, func() {
+		vol.Unlink(file)
+		vol.Unlink(dir)
+		vol.Unlink(tmpDir)
+	}
+}
+
+func check(t *testing.T, c bool, message string, args ...interface{}) {
+	t.Helper()
+
+	if !c {
+		t.Fatalf(message, args...)
 	}
 }
