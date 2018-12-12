@@ -33,7 +33,7 @@ func TestInit(t *testing.T) {
 }
 
 func TestSetLogging(t *testing.T) {
-	err := vol.SetLogging("/var/log/glusterfs/test.log", LogDebug)
+	err := vol.SetLogging("./test.log", LogDebug)
 	if err != nil {
 		t.Fatalf("Unable to set Logging: error:  %v", err)
 	}
