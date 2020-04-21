@@ -1,4 +1,4 @@
-// +build !gluster3
+// +build gluster3
 
 package gfapi
 
@@ -8,12 +8,6 @@ package gfapi
 // #include "glusterfs/api/glfs.h"
 // #include <stdlib.h>
 // #include <sys/stat.h>
-/*
-struct glfs_stat* alloc_stat(){
-	struct glfs_stat *ptr = malloc(sizeof(struct glfs_stat));
-	return ptr;
-}
-*/
 import "C"
 import (
 	"os"
@@ -53,12 +47,7 @@ func (fd *Fd) Fstat(stat *syscall.Stat_t) error {
 //
 // Returns error on failure
 func (fd *Fd) Fsync() error {
-    preStat := C.alloc_stat()
-    postStat := C.alloc_stat()
-    defer C.free(unsafe.Pointer(preStat))
-    defer C.free(unsafe.Pointer(postStat))
-
-	ret, err := C.glfs_fsync(fd.fd, preStat, postStat)
+	ret, err := C.glfs_fsync(fd.fd)
 	if ret < 0 {
 		return err
 	}
@@ -69,12 +58,7 @@ func (fd *Fd) Fsync() error {
 //
 // Returns error on failure
 func (fd *Fd) Ftruncate(size int64) error {
-    preStat := C.alloc_stat()
-    postStat := C.alloc_stat()
-    defer C.free(unsafe.Pointer(preStat))
-    defer C.free(unsafe.Pointer(postStat))
-
-	_, err := C.glfs_ftruncate(fd.fd, C.off_t(size), preStat, postStat)
+	_, err := C.glfs_ftruncate(fd.fd, C.off_t(size))
 
 	return err
 }
@@ -83,10 +67,7 @@ func (fd *Fd) Ftruncate(size int64) error {
 //
 // Returns number of bytes read on success and error on failure
 func (fd *Fd) Pread(b []byte, off int64) (int, error) {
-    postStat := C.alloc_stat()
-    defer C.free(unsafe.Pointer(postStat))
-
-	n, err := C.glfs_pread(fd.fd, unsafe.Pointer(&b[0]), C.size_t(len(b)), C.off_t(off), 0, postStat)
+	n, err := C.glfs_pread(fd.fd, unsafe.Pointer(&b[0]), C.size_t(len(b)), C.off_t(off), 0)
 
 	return int(n), err
 }
@@ -95,12 +76,7 @@ func (fd *Fd) Pread(b []byte, off int64) (int, error) {
 //
 // Returns number of bytes written on success and error on failure
 func (fd *Fd) Pwrite(b []byte, off int64) (int, error) {
-    preStat := C.alloc_stat()
-    postStat := C.alloc_stat()
-    defer C.free(unsafe.Pointer(preStat))
-    defer C.free(unsafe.Pointer(postStat))
-
-	n, err := C.glfs_pwrite(fd.fd, unsafe.Pointer(&b[0]), C.size_t(len(b)), C.off_t(off), 0, preStat, postStat)
+	n, err := C.glfs_pwrite(fd.fd, unsafe.Pointer(&b[0]), C.size_t(len(b)), C.off_t(off), 0)
 
 	return int(n), err
 }
