@@ -1,3 +1,4 @@
+// +build !gluster3
 package gfapi
 
 // This file includes lower level operations on fd like the ones in the 'syscall' package
