@@ -5,7 +5,7 @@
 //
 // To use gfapi, a virtual volume must be initialized and mounted first.
 // 	vol := &gfapi.Volume{}
-//	e := vol.Init("hostname", "volume")
+//	e := vol.Init("volume", "hostname")
 //	e := vol.Mount()
 //
 // Once the virtual volume is mounted, the vol object can be used like the os package to perform file operations.
