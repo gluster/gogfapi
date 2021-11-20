@@ -15,4 +15,4 @@
 //
 // The gfapi.File implements the same interfaces as os.File, and can be used wherever os.File is used.
 // XXX: Acutally verify this.
-package gfapi //import "github.com/gluster/gogfapi/gfapi"
+package gfapi //import "github.com/xuzhipeng12/gogfapi/gfapi"
